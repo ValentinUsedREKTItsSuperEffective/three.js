@@ -9,6 +9,7 @@
  *
  *  size: <float>, // size of the text
  *  height: <float>, // thickness to extrude text
+ *  textDirection: <Vector3>, // direction of the text
  *  curveSegments: <int>, // number of points on the curves
  *
  *  bevelEnabled: <bool>, // turn on bevel

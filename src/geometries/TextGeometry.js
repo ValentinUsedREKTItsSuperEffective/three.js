@@ -74,7 +74,7 @@ function TextBufferGeometry( text, parameters ) {
 	if ( parameters.bevelSize === undefined ) parameters.bevelSize = 8;
 	if ( parameters.bevelEnabled === undefined ) parameters.bevelEnabled = false;
 
-	if ( parameters.textDirection === undefined || parameters.textDirection.equals( new Vector3( 1, 0, 0 ) ) ) {
+	if ( parameters.textDirection === undefined || parameters.textDirection.equals( new Vector2( 1, 0 ) ) ) {
 		ExtrudeBufferGeometry.call( this, shapes, parameters );
 	} else {
 		BufferGeometry.call ( this );
@@ -83,14 +83,32 @@ function TextBufferGeometry( text, parameters ) {
 			uvArray = [];
 		
 		var xOffset = 0,
-			yOffset = 0;
+			yOffset = 0,
+			prevXOffset = 0,
+			lineXOffset = 0,
+			lineYOffset = 0;
+
+		var textDirectionNormal = parameters.textDirection.clone().normalize();
+			textDirectionNormal.set ( -textDirectionNormal.y, textDirectionNormal.x ).normalize();
+
+		var lineHeight = ( font.data.boundingBox.yMax - font.data.boundingBox.yMin + font.data.underlineThickness ) * (parameters.size / font.data.resolution);
 
 		shapes.forEach(shape => {
 			var geo = new ExtrudeBufferGeometry( shape, parameters );
 			geo.computeBoundingBox();
 
-			xOffset = geo.boundingBox.min.x;
-			yOffset += geo.boundingBox.max.y - geo.boundingBox.min.y;
+			xOffset = lineXOffset + geo.boundingBox.min.x;
+			if( prevXOffset > xOffset ){
+				//new line
+				lineXOffset -= lineHeight * textDirectionNormal.x;
+				lineYOffset -= lineHeight * textDirectionNormal.y;
+
+				xOffset = lineXOffset + geo.boundingBox.min.x;
+				yOffset = lineYOffset;
+			} else {
+				yOffset += geo.boundingBox.max.y - geo.boundingBox.min.y;
+			}
+
 			var scaledDirection = parameters.textDirection.clone().multiply( new Vector2( xOffset, yOffset ) );
 			
 			var vertices = geo.getAttribute( 'position' ).array;
@@ -101,6 +119,7 @@ function TextBufferGeometry( text, parameters ) {
 
 			verticesArray.push( ...vertices );
 			uvArray.push( ...geo.getAttribute( 'uv' ).array );
+			prevXOffset = xOffset;
 		});
 
 		this.setAttribute( 'position', new Float32BufferAttribute( verticesArray, 3 ) );

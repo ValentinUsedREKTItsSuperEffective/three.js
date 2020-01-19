@@ -6,7 +6,7 @@ export interface TextGeometryParameters {
 	font?: Font;
 	size?: number;
 	height?: number;
-	textDirection?: Vector3;
+	textDirection?: Vector2;
 	curveSegments?: number;
 	bevelEnabled?: boolean;
 	bevelThickness?: number;
@@ -23,7 +23,7 @@ export class TextBufferGeometry extends ExtrudeBufferGeometry {
 		font: Font;
 		size: number;
 		height: number;
-		textDirection: Vector3;
+		textDirection: Vector2;
 		curveSegments: number;
 		bevelEnabled: boolean;
 		bevelThickness: number;
@@ -42,7 +42,7 @@ export class TextGeometry extends ExtrudeGeometry {
 		font: Font;
 		size: number;
 		height: number;
-		textDirection: Vector3;
+		textDirection: Vector2;
 		curveSegments: number;
 		bevelEnabled: boolean;
 		bevelThickness: number;

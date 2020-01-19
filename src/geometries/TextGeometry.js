@@ -21,6 +21,10 @@
 
 import { Geometry } from '../core/Geometry.js';
 import { ExtrudeBufferGeometry } from './ExtrudeGeometry.js';
+import { Float32BufferAttribute } from '../core/BufferAttribute.js';
+import { Vector3 } from '../math/Vector3.js';
+import { BufferGeometry } from '../core/BufferGeometry.js';
+import { Vector2 } from '../math/Vector2.js';
 
 // TextGeometry
 
@@ -70,7 +74,40 @@ function TextBufferGeometry( text, parameters ) {
 	if ( parameters.bevelSize === undefined ) parameters.bevelSize = 8;
 	if ( parameters.bevelEnabled === undefined ) parameters.bevelEnabled = false;
 
-	ExtrudeBufferGeometry.call( this, shapes, parameters );
+	if ( parameters.textDirection === undefined || parameters.textDirection.equals( new Vector3( 1, 0, 0 ) ) ) {
+		ExtrudeBufferGeometry.call( this, shapes, parameters );
+	} else {
+		BufferGeometry.call ( this );
+
+		var verticesArray = [],
+			uvArray = [];
+		
+		var xOffset = 0,
+			yOffset = 0;
+
+		shapes.forEach(shape => {
+			var geo = new ExtrudeBufferGeometry( shape, parameters );
+			geo.computeBoundingBox();
+
+			xOffset = geo.boundingBox.min.x;
+			yOffset += geo.boundingBox.max.y - geo.boundingBox.min.y;
+			var scaledDirection = parameters.textDirection.clone().multiply( new Vector2( xOffset, yOffset ) );
+			
+			var vertices = geo.getAttribute( 'position' ).array;
+			for (var i = 0; i < vertices.length; i += 3){
+				vertices[i] += scaledDirection.x - xOffset;
+				vertices[i + 1] += scaledDirection.y - yOffset;
+			}
+
+			verticesArray.push( ...vertices );
+			uvArray.push( ...geo.getAttribute( 'uv' ).array );
+		});
+
+		this.setAttribute( 'position', new Float32BufferAttribute( verticesArray, 3 ) );
+		this.setAttribute( 'uv', new Float32BufferAttribute( uvArray, 2 ) );
+
+		this.computeVertexNormals();
+	}
 
 	this.type = 'TextBufferGeometry';
 
